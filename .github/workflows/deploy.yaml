@@ -49,17 +49,32 @@ jobs:
       run: |
         sed -i "s|image: ghcr.io/revathibala/hello-world-app:.*|image: ghcr.io/revathibala/hello-world-app:${{ github.sha }}|" k8s/deployment.yaml
 
-    - name: Commit and push updated manifest
-      env:
-        GIT_TOKEN: ${{ secrets.GHCR_PAT }}
-      run: |
-        git config user.name "github-actions"
-        git config user.email "actions@github.com"
-        git remote set-url origin https://x-access-token:${GIT_TOKEN}@github.com/${{ github.repository }}.git
-        git add k8s/deployment.yaml
-        git commit -m "Update image tag to ${{ github.sha }}"
-        git push origin main
+    # - name: Commit and push updated manifest
+    #   env:
+    #     GIT_TOKEN: ${{ secrets.GHCR_PAT }}
+    #   run: |
+    #     git config user.name "github-actions"
+    #     git config user.email "actions@github.com"
+    #     git remote set-url origin https://x-access-token:${GIT_TOKEN}@github.com/${{ github.repository }}.git
+    #     git add k8s/deployment.yaml
+    #     git commit -m "Update image tag to ${{ github.sha }}"
+    #     git push origin main
 
+  - name: Set up SSH
+    run: |
+      mkdir -p ~/.ssh
+      echo "${{ secrets.ACTIONS_DEPLOY_KEY }}" > ~/.ssh/id_ed25519
+      chmod 600 ~/.ssh/id_ed25519
+      ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+  - name: Commit and push updated manifest
+    run: |
+      git config user.name "github-actions"
+      git config user.email "actions@github.com"
+      git remote set-url origin git@github.com:${{ github.repository }}.git
+      git add k8s/deployment.yaml
+      git commit -m "Update image tag to ${{ github.sha }}"
+      git push origin main
     
     - name: Install OpenShift CLI
       run: |
