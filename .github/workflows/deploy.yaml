@@ -51,11 +51,11 @@ jobs:
 
     - name: Commit and push updated manifest
       env:
-        GIT_TOKEN: ${{ secrets.GHCR_PAT1 }}
+        GIT_TOKEN: ${{ secrets.REPO_PAT }}
       run: |
         git config user.name "github-actions"
         git config user.email "actions@github.com"
-        git remote set-url origin https://x-access-token:${GIT_TOKEN}@github.com/revathibala/hello-world-app.git
+        git remote set-url origin https://x-access-token:${GIT_TOKEN}@github.com/${{ github.repository }}.git
         git add k8s/deployment.yaml
         git commit -m "Update image tag to ${{ github.sha }}"
         git push origin main
