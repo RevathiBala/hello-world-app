@@ -19,7 +19,7 @@ spec:
       serviceAccountName: webapp-sa
       containers:
         - name: webapp
-          image: ghcr.io/revathibala/hello-world-app:72a75f14e4933a8f55bf1f1a95a3db9f99c97a3b
+          image: ghcr.io/revathibala/hello-world-app:76e6ebb0c06b8dbd9330e7de27c3378083a2de60
           ports:
             - containerPort: 80
           envFrom:
