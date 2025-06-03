@@ -86,9 +86,9 @@ jobs:
       run: |
         oc login --token=${{ secrets.ROSA_TOKEN }} --server=${{ secrets.ROSA_SERVER }}
 
-    - name: Create or update Argo CD Application
-      run: |
-        kubectl apply -f argo-app.yaml -n argocd
+    # - name: Create or update Argo CD Application
+    #   run: |
+    #     kubectl apply -f argo-app.yaml -n argocd
 
     # - name: Deploy to ROSA
     #   run: |
