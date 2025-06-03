@@ -1,54 +1,153 @@
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hello-world-app-deployment
+  name: webapp-deployment
+  namespace: default
   labels:
-    app: hello-world-app
+    app: webapp
 spec:
-  replicas: 1  
+  replicas: 1
   selector:
     matchLabels:
-      app: hello-world-app
+      app: webapp
   template:
     metadata:
       labels:
-        app: hello-world-app
+        app: webapp
     spec:
+      serviceAccountName: webapp-sa
       containers:
-      - name: hello-world-app
-        image: ghcr.io/revathibala/hello-world-app:d14cf4f4f5bc1677a387b1a28cb64e98f3abdb8d
-        ports:
-        - containerPort: 80  
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
+        - name: webapp
+          image: ghcr.io/revathibala/hello-world-app:latest
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: webapp-config
+            - secretRef:
+                name: webapp-secret
+          volumeMounts:
+            - name: app-storage
+              mountPath: /usr/share/nginx/html  # Example path
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: app-storage
+          persistentVolumeClaim:
+            claimName: webapp-pvc
+
 ---
+
+
 apiVersion: v1
 kind: Service
 metadata:
-  name: hello-world-app-service
+  name: webapp-service
+  namespace: default
 spec:
   selector:
-    app: hello-world-app
+    app: webapp
   ports:
     - protocol: TCP
-      port: 80     
-      targetPort: 80  
-  type: ClusterIP  
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+
 ---
+
+
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: hello-world-app-route
+  name: webapp-route
+  namespace: default
 spec:
   to:
     kind: Service
-    name: hello-world-app-service
+    name: webapp-service
   port:
     targetPort: 80
   tls:
-    termination: edge  
+    termination: edge
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: webapp-sa
+  namespace: default
+
+---
+
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: webapp-role
+  namespace: default
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+---
+
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: webapp-rolebinding
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: webapp-sa
+    namespace: default
+roleRef:
+  kind: Role
+  name: webapp-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: webapp-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: webapp-secret
+  namespace: default
+type: Opaque
+stringData:
+  APP_KEY: MySecretKey123
+
+---
+
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webapp-config
+  namespace: default
+data:
+  WELCOME_MSG: "Welcome to My Web Application on ROSA!"
