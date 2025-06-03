@@ -1,8 +1,8 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: 24794-webapp  
-  namespace: argocd 
+  name: hello-world-app 
+  namespace: 24794-webapp 
 spec:
   project: default
   source:
